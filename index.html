@@ -111,11 +111,26 @@
     line-height:1.85;
     color:var(--ink);
   }
-  .advance-btn{
+  .advance-wrap{
     position:absolute;
     left:50%;
     bottom:9%;
     transform:translateX(-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    transition:opacity 0.4s ease;
+  }
+  .advance-wrap.hidden{ opacity:0; pointer-events:none; }
+  .advance-hint{
+    font-size:11px;
+    letter-spacing:0.18em;
+    color:var(--ink-soft);
+    text-transform:lowercase;
+    font-weight:500;
+  }
+  .advance-btn{
     font-family:'Zen Maru Gothic', sans-serif;
     font-size:14px;
     letter-spacing:0.08em;
@@ -126,10 +141,10 @@
     padding:12px 30px;
     cursor:pointer;
     box-shadow:0 4px 14px rgba(72,87,122,0.28);
-    transition:transform 0.2s ease, opacity 0.4s ease;
+    transition:transform 0.2s ease;
   }
-  .advance-btn:active{ transform:translateX(-50%) scale(0.96); }
-  .advance-btn:disabled{ opacity:0; pointer-events:none; }
+  .advance-btn:active{ transform:scale(0.96); }
+  .advance-wrap:has(.advance-btn:disabled){ opacity:0; pointer-events:none; }
 
   .diary{
     position:absolute; inset:0;
@@ -347,7 +362,10 @@
       <div class="msg" id="bubble-msg">小さな手紙が、あなたの元へ。<br>開くと、鳥になりました。</div>
     </div>
 
-    <button class="advance-btn" id="advanceBtn">鳥と歩く</button>
+    <div class="advance-wrap" id="advanceWrap">
+      <span class="advance-hint">Tap to</span>
+      <button class="advance-btn" id="advanceBtn">鳥と歩く</button>
+    </div>
 
     <div class="diary" id="diary">
       <div class="diary-card">
@@ -537,7 +555,7 @@ function drawBird(){
     const a = pathPoints[birdSeg];
     const b = pathPoints[targetSeg];
     pos = p5.Vector.lerp(a,b,eased);
-    pos.y -= sin(eased*PI) * 34; // ホップの弧
+    pos.y -= sin(eased*PI) * 68; // ホップの弧
     if(t>=1){
       hopping = false;
       birdSeg = targetSeg;
@@ -551,7 +569,8 @@ function drawBird(){
   const flap = sin(flapPhase) * 18;
 
   push();
-  translate(pos.x, pos.y - stoneRadius - 26);
+  translate(pos.x, pos.y - stoneRadius - 52);
+  scale(2);
 
   // 影
   push();
@@ -648,8 +667,9 @@ function renderStep(){
   labelEl.textContent = s.label;
   msgEl.innerHTML = s.msg;
 
+  const wrap = document.getElementById('advanceWrap');
   if(s.showCalendar && selectedDate === null){
-    btn.style.display = 'none';
+    wrap.classList.add('hidden');
     calOverlay.classList.remove('show');
     showMonthPanel();
     setTimeout(()=>{ calOverlay.classList.add('show'); }, 450);
@@ -657,7 +677,7 @@ function renderStep(){
   }
 
   calOverlay.classList.remove('show');
-  btn.style.display = '';
+  wrap.classList.remove('hidden');
   btn.textContent = s.cta;
 }
 
@@ -738,9 +758,8 @@ function onSelectDay(year, month, day, btnEl){
     document.getElementById('bubble-label').textContent = "予約の目安、決まりました";
     document.getElementById('bubble-msg').innerHTML =
       month + "月" + day + "日に、そっと予約してみましょう。<br>鳥も、一緒に待っています。";
-    const btn = document.getElementById('advanceBtn');
-    btn.style.display = '';
-    btn.textContent = steps[current].cta;
+    document.getElementById('advanceWrap').classList.remove('hidden');
+    document.getElementById('advanceBtn').textContent = steps[current].cta;
   }, 500);
 }
 
@@ -768,6 +787,7 @@ function finishJourney(){
   spawnConfetti();
   showingDiary = true;
   document.getElementById('advanceBtn').disabled = true;
+  document.getElementById('advanceWrap').classList.add('hidden');
   const diaryText = document.getElementById('diary-text');
   if(selectedDate){
     diaryText.innerHTML = selectedDate.month + "月" + selectedDate.day + "日に予約して、<br>今日という日を迎えました。";
