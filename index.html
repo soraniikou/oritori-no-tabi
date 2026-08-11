@@ -836,6 +836,7 @@ function finishJourney(){
   showingDiary = true;
   document.getElementById('advanceBtn').disabled = true;
   document.getElementById('advanceWrap').classList.add('hidden');
+  document.getElementById('bubble').style.opacity = '0';
   const diaryText = document.getElementById('diary-text');
   if(selectedDate){
     diaryText.innerHTML = selectedDate.month + "月" + selectedDate.day + "日に予約して、<br>今日という日を迎えました。";
@@ -848,6 +849,7 @@ function finishJourney(){
 
 function resetJourney(){
   document.getElementById('diary').classList.remove('show');
+  document.getElementById('bubble').style.opacity = '1';
   document.getElementById('calendarOverlay').classList.remove('show');
   document.getElementById('dateBadge').classList.remove('show');
   document.querySelectorAll('.month-btn, .day-btn').forEach(b=>b.classList.remove('selected'));
