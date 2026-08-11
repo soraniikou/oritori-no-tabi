@@ -547,7 +547,7 @@ function currentReachedIndex(){
 }
 
 // --- とり (折り紙風) ---
-function drawBird(){
+Function drawBird(){
   let pos;
   if(hopping){
     const t = constrain((millis()-hopStart)/HOP_MS, 0, 1);
@@ -555,7 +555,7 @@ function drawBird(){
     const a = pathPoints[birdSeg];
     const b = pathPoints[targetSeg];
     pos = p5.Vector.lerp(a,b,eased);
-    pos.y -= sin(eased*PI) * 68; // ホップの弧
+    pos.y -= sin(eased*PI) * 68;
     if(t>=1){
       hopping = false;
       birdSeg = targetSeg;
@@ -565,44 +565,95 @@ function drawBird(){
     pos = pathPoints[birdSeg].copy();
   }
 
-  flapPhase += 0.12;
-  const flap = sin(flapPhase) * 18;
+  flapPhase += 0.07;
+  const flap = sin(flapPhase) * 12;
 
   push();
   translate(pos.x, pos.y - stoneRadius - 52);
-  scale(2);
+  scale(2.2);
 
   // 影
   push();
-  translate(0, stoneRadius+26);
-  fill(58,55,51,25);
-  ellipse(0,4, 30,8);
+  translate(0, stoneRadius + 22);
+  fill(58,55,51,20);
+  ellipse(0, 4, 48, 9);
   pop();
 
-  // 体（折り紙の三角の集合）
-  fill(72,87,122);
-  triangle(-16,10, 16,10, 0,-14);       // 胴体
-  fill(217,168,87);
-  triangle(0,-14, 10,-24, -2,-20);      // くちばし
-
-  // 翼（左右対称、フラップ）
+  // 左翼（大きく広がる）
   push();
-  fill(224,162,180);
-  translate(-4,-2);
-  rotate(radians(flap));
-  triangle(0,0, -20,-4, -14,10);
+  translate(-4, 0);
+  rotate(radians(-15 + flap));
+  fill(224, 162, 180);
+  beginShape();
+  vertex(0, 0);
+  vertex(-30, -12);
+  vertex(-26, 6);
+  endShape(CLOSE);
+  fill(200, 138, 158);
+  beginShape();
+  vertex(-26, 6);
+  vertex(-30, -12);
+  vertex(-38, -2);
+  endShape(CLOSE);
   pop();
 
+  // 右翼
   push();
-  fill(224,162,180);
-  translate(4,-2);
-  rotate(radians(-flap));
-  triangle(0,0, 20,-4, 14,10);
+  translate(4, 0);
+  rotate(radians(15 - flap));
+  fill(224, 162, 180);
+  beginShape();
+  vertex(0, 0);
+  vertex(30, -12);
+  vertex(26, 6);
+  endShape(CLOSE);
+  fill(200, 138, 158);
+  beginShape();
+  vertex(26, 6);
+  vertex(30, -12);
+  vertex(38, -2);
+  endShape(CLOSE);
   pop();
+
+  // 胴体（ひし形）
+  fill(72, 87, 122);
+  beginShape();
+  vertex(0, -12);
+  vertex(9, 0);
+  vertex(0, 12);
+  vertex(-9, 0);
+  endShape(CLOSE);
+
+  // 首
+  fill(72, 87, 122);
+  beginShape();
+  vertex(0, -12);
+  vertex(7, -26);
+  vertex(2, -14);
+  endShape(CLOSE);
+
+  // 頭
+  fill(72, 87, 122);
+  circle(8, -28, 7);
+
+  // くちばし
+  fill(217, 168, 87);
+  triangle(10, -26, 17, -30, 11, -23);
+
+  // 尻尾（上向き）
+  fill(72, 87, 122);
+  beginShape();
+  vertex(0, 12);
+  vertex(-5, 26);
+  vertex(5, 26);
+  endShape(CLOSE);
 
   // 目
-  fill(58,55,51);
-  circle(-3,-12, 2.4);
+  fill(255, 252, 240);
+  circle(10, -29, 3.5);
+  fill(40, 36, 32);
+  circle(10.5, -29, 2);
+
   pop();
 }
 
