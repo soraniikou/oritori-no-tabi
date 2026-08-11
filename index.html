@@ -636,6 +636,15 @@ function drawBird(){
   endShape(CLOSE);
 
   // 頭（円ではなく、折り鶴の鋭角な頭部を多角形で表現）
+  // 首（さらに短く、胴体に近づける）
+  fill(72, 87, 122);
+  beginShape();
+  vertex(0, -6); // Y座標を-12から-6へ
+  vertex(4, -10); // Y座標を-18から-10へ大幅に浅く
+  vertex(2, -8); // Y座標を-14から-8へ
+  endShape(CLOSE);
+
+  // 頭（円ではなく、折り鶴の鋭角な頭部を多角形で表現）
   fill(72, 87, 122);
   beginShape();
   vertex(3, -10); // 首の頂点近く
@@ -646,6 +655,19 @@ function drawBird(){
   endShape(CLOSE);
 
   // （くちばしは頭の一部として多角形で表現するため、個別のコードは削除）
+
+  // 尻尾（上向き、変更なし）
+  fill(72, 87, 122);
+  beginShape();
+  vertex(0, 12);
+  vertex(-5, 26);
+  vertex(5, 26);
+  endShape(CLOSE);
+
+  // （目のコードは、折り鶴の純粋な形を表現するために削除）
+
+  pop();
+}
 
   // 尻尾（上向き、変更なし）
   fill(72, 87, 122);
