@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>折り紙とりさんの旅日記</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<style>
+  :root{
+    --paper:#F6EFE1;
+    --paper-deep:#EFE4CE;
+    --ink:#3A3733;
+    --ink-soft:#736B5E;
+    --sakura:#F0C6D2;
+    --sakura-deep:#E2A2B4;
+    --indigo:#48577A;
+    --gold:#D9A857;
+    --moss:#8FA37C;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    background:var(--paper);
+    font-family:'Zen Maru Gothic', sans-serif;
+    color:var(--ink);
+    overflow:hidden;
+    height:100%;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #canvas-holder{
+    position:fixed; inset:0;
+  }
+  .veil{
+    position:fixed; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    pointer-events:none;
+  }
+  .stage{
+    position:relative;
+    width:min(94vw, 460px);
+    height:min(88vh, 780px);
+    pointer-events:auto;
+  }
+  header.title{
+    position:absolute;
+    top:6%;
+    left:0; right:0;
+    text-align:center;
+    pointer-events:none;
+  }
+  header.title h1{
+    font-family:'Shippori Mincho', serif;
+    font-weight:600;
+    font-size:clamp(20px, 5vw, 26px);
+    letter-spacing:0.08em;
+    margin:0;
+    color:var(--ink);
+  }
+  header.title p{
+    font-size:12px;
+    letter-spacing:0.12em;
+    color:var(--ink-soft);
+    margin:6px 0 0;
+  }
+  .date-badge{
+    display:none;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    margin-top:10px;
+  }
+  .date-badge.show{ display:flex; }
+  .date-badge #dateBadgeText{
+    font-family:'Shippori Mincho', serif;
+    font-weight:700;
+    font-size:16px;
+    letter-spacing:0.06em;
+    color:#E2789A;
+  }
+  .date-badge .sunflower{
+    font-size:17px;
+    line-height:1;
+    transform:translateY(1px);
+  }
+  .bubble{
+    position:absolute;
+    left:50%;
+    bottom:23%;
+    transform:translateX(-50%);
+    width:min(84%, 380px);
+    background:#FFFDF8;
+    border:1px solid #E7DCC4;
+    border-radius:18px;
+    padding:16px 20px;
+    text-align:center;
+    box-shadow:0 6px 18px rgba(58,55,51,0.08);
+    transition:opacity 0.5s ease;
+  }
+  .bubble .label{
+    font-size:11px;
+    letter-spacing:0.14em;
+    color:var(--sakura-deep);
+    margin-bottom:6px;
+    font-weight:700;
+  }
+  .bubble .msg{
+    font-family:'Shippori Mincho', serif;
+    font-size:15px;
+    line-height:1.85;
+    color:var(--ink);
+  }
+  .advance-btn{
+    position:absolute;
+    left:50%;
+    bottom:9%;
+    transform:translateX(-50%);
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-size:14px;
+    letter-spacing:0.08em;
+    background:var(--indigo);
+    color:#FBF7EE;
+    border:none;
+    border-radius:999px;
+    padding:12px 30px;
+    cursor:pointer;
+    box-shadow:0 4px 14px rgba(72,87,122,0.28);
+    transition:transform 0.2s ease, opacity 0.4s ease;
+  }
+  .advance-btn:active{ transform:translateX(-50%) scale(0.96); }
+  .advance-btn:disabled{ opacity:0; pointer-events:none; }
+
+  .diary{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.9s ease;
+  }
+  .diary.show{ opacity:1; pointer-events:auto; }
+  .diary-card{
+    width:min(86%, 380px);
+    background:#FFFDF8;
+    border:1px solid #E7DCC4;
+    border-radius:20px;
+    padding:34px 26px;
+    text-align:center;
+    box-shadow:0 10px 30px rgba(58,55,51,0.14);
+  }
+  .diary-card .kicker{
+    font-size:11px;
+    letter-spacing:0.2em;
+    color:var(--moss);
+    font-weight:700;
+    margin-bottom:14px;
+  }
+  .diary-card p{
+    font-family:'Shippori Mincho', serif;
+    font-size:16px;
+    line-height:2;
+    color:var(--ink);
+    margin:0 0 20px;
+  }
+  .diary-card .again{
+    font-size:12px;
+    color:var(--ink-soft);
+    letter-spacing:0.06em;
+    cursor:pointer;
+    text-decoration:underline;
+    text-underline-offset:4px;
+  }
+  .calendar-overlay{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.5s ease;
+    z-index:5;
+  }
+  .calendar-overlay.show{ opacity:1; pointer-events:auto; }
+  .calendar-card{
+    width:min(90%, 380px);
+    background:#FFFDF8;
+    border:1px solid #E7DCC4;
+    border-radius:20px;
+    padding:24px 22px 20px;
+    text-align:center;
+    box-shadow:0 10px 30px rgba(58,55,51,0.16);
+  }
+  .calendar-card .kicker{
+    font-size:11px;
+    letter-spacing:0.16em;
+    color:var(--sakura-deep);
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  .calendar-card h2{
+    font-family:'Shippori Mincho', serif;
+    font-weight:600;
+    font-size:16px;
+    margin:2px 0 18px;
+    color:var(--ink);
+  }
+  .month-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:10px;
+  }
+  .month-btn{
+    position:relative;
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-size:14px;
+    letter-spacing:0.02em;
+    background:var(--paper-deep);
+    color:var(--ink);
+    border:1px solid #E7DCC4;
+    border-radius:14px;
+    padding:12px 0;
+    cursor:pointer;
+    transition:transform 0.15s ease, background 0.2s ease, color 0.2s ease;
+  }
+  .month-btn:active{ transform:scale(0.95); }
+  .month-btn.is-now::after{
+    content:"いま";
+    position:absolute;
+    top:-8px; right:-6px;
+    font-size:9px;
+    background:var(--moss);
+    color:#FBF7EE;
+    border-radius:8px;
+    padding:2px 6px;
+    letter-spacing:0.04em;
+  }
+  .month-btn.selected{
+    background:var(--indigo);
+    color:#FBF7EE;
+    border-color:var(--indigo);
+  }
+  .calendar-card .note{
+    margin-top:16px;
+    font-size:11px;
+    color:var(--ink-soft);
+    letter-spacing:0.04em;
+    line-height:1.7;
+  }
+  .month-btn .yr{
+    display:block;
+    font-size:9px;
+    color:var(--ink-soft);
+    margin-top:2px;
+    letter-spacing:0.03em;
+  }
+  .month-btn.selected .yr{ color:#E7DFCB; }
+
+  .day-panel-head{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    margin-bottom:14px;
+  }
+  .day-panel-head h2{
+    font-family:'Shippori Mincho', serif;
+    font-weight:600;
+    font-size:16px;
+    margin:0;
+    color:var(--ink);
+  }
+  .back-btn{
+    position:absolute;
+    left:0;
+    background:none;
+    border:none;
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-size:11px;
+    color:var(--ink-soft);
+    letter-spacing:0.03em;
+    cursor:pointer;
+    padding:4px 2px;
+  }
+  .weekday-row{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    gap:4px;
+    margin-bottom:6px;
+  }
+  .weekday-row span{
+    font-size:10px;
+    color:var(--ink-soft);
+    text-align:center;
+  }
+  .day-grid{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    gap:5px;
+  }
+  .day-btn{
+    aspect-ratio:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-size:12.5px;
+    background:var(--paper-deep);
+    color:var(--ink);
+    border:1px solid #E7DCC4;
+    border-radius:10px;
+    cursor:pointer;
+    transition:transform 0.15s ease, background 0.2s ease, color 0.2s ease;
+  }
+  .day-btn:active{ transform:scale(0.9); }
+  .day-btn.is-today{ box-shadow:0 0 0 1.5px var(--moss) inset; }
+  .day-btn.selected{
+    background:var(--indigo);
+    color:#FBF7EE;
+    border-color:var(--indigo);
+  }
+  .day-cell-empty{ visibility:hidden; }
+  footer.privacy{
+    position:absolute;
+    bottom:2%;
+    left:0; right:0;
+    text-align:center;
+    font-size:10px;
+    letter-spacing:0.08em;
+    color:var(--ink-soft);
+    opacity:0.6;
+    pointer-events:none;
+  }
+</style>
+</head>
+<body>
+<div id="canvas-holder"></div>
+<div class="veil">
+  <div class="stage">
+    <header class="title">
+      <h1>折り紙鳥さんの旅日記</h1>
+      <div class="date-badge" id="dateBadge">
+        <span id="dateBadgeText"></span>
+        <span class="sunflower">🌻</span>
+      </div>
+    </header>
+
+    <div class="bubble" id="bubble">
+      <div class="label" id="bubble-label">葉書が届きました</div>
+      <div class="msg" id="bubble-msg">小さな手紙が、あなたの元へ。<br>開くと、鳥になりました。</div>
+    </div>
+
+    <button class="advance-btn" id="advanceBtn">鳥と歩く</button>
+
+    <div class="diary" id="diary">
+      <div class="diary-card">
+        <div class="kicker">旅の記録</div>
+        <p id="diary-text">今年も、自分の体と<br>そっと向き合いました。</p>
+        <div class="again" id="againBtn">Back</div>
+      </div>
+    </div>
+
+    <div class="calendar-overlay" id="calendarOverlay">
+      <div class="calendar-card">
+        <div class="panel" id="monthPanel">
+          <div class="kicker">予約の目安</div>
+          <h2>どの月に、予約しましょうか</h2>
+          <div class="month-grid" id="monthGrid"></div>
+          <p class="note">タップすると、その月の日付が出てきます。</p>
+        </div>
+
+        <div class="panel" id="dayPanel" style="display:none;">
+          <div class="day-panel-head">
+            <button type="button" class="back-btn" id="backToMonth">← 月に戻る</button>
+            <h2 id="dayPanelTitle">8月</h2>
+          </div>
+          <div class="weekday-row" id="weekdayRow"></div>
+          <div class="day-grid" id="dayGrid"></div>
+          <p class="note">日付は、目安で大丈夫。<br>選ぶと、鳥にそっと伝わります。</p>
+        </div>
+      </div>
+    </div>
+
+    <footer class="privacy">名前も記録も残しません。ただ、鳥だけが憶えています。</footer>
+  </div>
+</div>
+
+<script>
+const steps = [
+  {
+    label: "葉書が届きました",
+    msg: "小さな手紙が、あなたの元へ。<br>開くと、鳥になりました。",
+    cta: "鳥と歩く"
+  },
+  {
+    label: "予約の前",
+    msg: "急がなくて、大丈夫。<br>鳥は、いつでも待っています。",
+    cta: "予約、してみる",
+    showCalendar: true
+  },
+  {
+    label: "予約ができました",
+    msg: "小さな一歩が、踏み出せましたね。<br>鳥が、羽を広げました。",
+    cta: "受診の日へ進む"
+  },
+  {
+    label: "受診　完了",
+    msg: "よく、自分を大切に<br>してあげましたね。",
+    cta: "記録を開く"
+  }
+];
+
+let selectedMonth = null; // 予約の目安月
+let selectedDate = null;  // {year, month, day}
+
+const YEAR_START = { year: 2026, month: 8 }; // 2026年8月から1年分
+const monthsList = (() => {
+  const list = [];
+  let { year, month } = YEAR_START;
+  for(let i=0;i<12;i++){
+    list.push({ year, month });
+    month++;
+    if(month>12){ month = 1; year++; }
+  }
+  return list;
+})();
+
+const WEEKDAYS = ['日','月','火','水','木','金','土'];
+
+let current = 0;
+let birdT = 0;          // 0..1 位置(区間内での補間)
+let birdSeg = 0;        // 現在の区間(0..steps.length-2)
+let targetSeg = 0;
+let flapPhase = 0;
+let hopping = false;
+let hopStart = 0;
+const HOP_MS = 900;
+let confetti = [];
+let showingDiary = false;
+
+let pathPoints = [];
+let stoneRadius = 16;
+
+function setup(){
+  const holder = document.getElementById('canvas-holder');
+  const c = createCanvas(windowWidth, windowHeight);
+  c.parent(holder);
+  computePath();
+  bindUI();
+  noStroke();
+  frameRate(60);
+}
+
+function windowResized(){
+  resizeCanvas(windowWidth, windowHeight);
+  computePath();
+}
+
+function computePath(){
+  // ステージ座標系に合わせて、画面中央付近を蛇行する道を作る
+  pathPoints = [];
+  const n = steps.length;
+  const marginX = width * 0.16;
+  const topY = height * 0.30;
+  const botY = height * 0.62;
+  for(let i=0;i<n;i++){
+    const x = marginX + (width - marginX*2) * (i/(n-1));
+    const wobble = sin(i*1.7) * height*0.035;
+    const y = lerp(topY, botY, i/(n-1)) + wobble;
+    pathPoints.push(createVector(x,y));
+  }
+}
+
+function draw(){
+  drawPaper();
+  drawPath();
+  drawBird();
+  drawConfetti();
+}
+
+// --- 背景: 和紙のようなノイズ地 ---
+let paperNoiseSeed = 0;
+function drawPaper(){
+  background(246, 239, 225);
+  randomSeed(1);
+  push();
+  for(let i=0;i<140;i++){
+    const x = random(width);
+    const y = random(height);
+    const a = random(4,10);
+    fill(235, 224, 200, a);
+    circle(x,y, random(30,90));
+  }
+  pop();
+}
+
+function drawPath(){
+  push();
+  noFill();
+  stroke(210, 196, 163);
+  strokeWeight(2);
+  drawingContext.setLineDash([1,10]);
+  beginShape();
+  for(const p of pathPoints){ curveVertex(p.x,p.y); }
+  endShape();
+  drawingContext.setLineDash([]);
+  pop();
+
+  for(let i=0;i<pathPoints.length;i++){
+    const p = pathPoints[i];
+    const reached = i <= currentReachedIndex();
+    push();
+    translate(p.x,p.y);
+    if(reached){
+      fill(143,163,124, 220);
+    } else {
+      fill(220,210,186);
+    }
+    // 葉っぱ型のストーン
+    beginShape();
+    vertex(0,-stoneRadius);
+    bezierVertex(stoneRadius*0.9,-stoneRadius*0.3, stoneRadius*0.9,stoneRadius*0.3, 0, stoneRadius);
+    bezierVertex(-stoneRadius*0.9, stoneRadius*0.3, -stoneRadius*0.9, -stoneRadius*0.3, 0, -stoneRadius);
+    endShape(CLOSE);
+    pop();
+  }
+}
+
+function currentReachedIndex(){
+  // 現在到達している最大のステップindex
+  return hopping ? birdSeg : current;
+}
+
+// --- とり (折り紙風) ---
+function drawBird(){
+  let pos;
+  if(hopping){
+    const t = constrain((millis()-hopStart)/HOP_MS, 0, 1);
+    const eased = t<0.5 ? 2*t*t : -1+(4-2*t)*t;
+    const a = pathPoints[birdSeg];
+    const b = pathPoints[targetSeg];
+    pos = p5.Vector.lerp(a,b,eased);
+    pos.y -= sin(eased*PI) * 34; // ホップの弧
+    if(t>=1){
+      hopping = false;
+      birdSeg = targetSeg;
+      current = birdSeg;
+    }
+  } else {
+    pos = pathPoints[birdSeg].copy();
+  }
+
+  flapPhase += 0.12;
+  const flap = sin(flapPhase) * 18;
+
+  push();
+  translate(pos.x, pos.y - stoneRadius - 26);
+
+  // 影
+  push();
+  translate(0, stoneRadius+26);
+  fill(58,55,51,25);
+  ellipse(0,4, 30,8);
+  pop();
+
+  // 体（折り紙の三角の集合）
+  fill(72,87,122);
+  triangle(-16,10, 16,10, 0,-14);       // 胴体
+  fill(217,168,87);
+  triangle(0,-14, 10,-24, -2,-20);      // くちばし
+
+  // 翼（左右対称、フラップ）
+  push();
+  fill(224,162,180);
+  translate(-4,-2);
+  rotate(radians(flap));
+  triangle(0,0, -20,-4, -14,10);
+  pop();
+
+  push();
+  fill(224,162,180);
+  translate(4,-2);
+  rotate(radians(-flap));
+  triangle(0,0, 20,-4, 14,10);
+  pop();
+
+  // 目
+  fill(58,55,51);
+  circle(-3,-12, 2.4);
+  pop();
+}
+
+// --- 紙吹雪(受診完了時) ---
+function spawnConfetti(){
+  confetti = [];
+  for(let i=0;i<70;i++){
+    confetti.push({
+      x: random(width),
+      y: random(-height*0.3, 0),
+      vy: random(1,2.6),
+      vx: random(-0.6,0.6),
+      size: random(5,10),
+      hue: random([  [240,198,210], [217,168,87], [143,163,124] ][floor(random(3))]),
+      rot: random(TWO_PI),
+      vr: random(-0.06,0.06)
+    });
+  }
+}
+function drawConfetti(){
+  if(confetti.length===0) return;
+  push();
+  noStroke();
+  for(const c of confetti){
+    fill(c.hue[0], c.hue[1], c.hue[2], 220);
+    push();
+    translate(c.x,c.y);
+    rotate(c.rot);
+    rectMode(CENTER);
+    rect(0,0,c.size, c.size*0.5, 2);
+    pop();
+    c.y += c.vy;
+    c.x += c.vx;
+    c.rot += c.vr;
+    if(c.y > height+20){
+      c.y = random(-80,-10);
+      c.x = random(width);
+    }
+  }
+  pop();
+}
+
+// --- UI 制御 ---
+function bindUI(){
+  const btn = document.getElementById('advanceBtn');
+  const again = document.getElementById('againBtn');
+  const back = document.getElementById('backToMonth');
+  btn.addEventListener('click', onAdvance);
+  again.addEventListener('click', resetJourney);
+  back.addEventListener('click', showMonthPanel);
+  buildMonthGrid();
+  renderStep();
+}
+
+function renderStep(){
+  const s = steps[current];
+  const labelEl = document.getElementById('bubble-label');
+  const msgEl = document.getElementById('bubble-msg');
+  const btn = document.getElementById('advanceBtn');
+  const calOverlay = document.getElementById('calendarOverlay');
+
+  labelEl.textContent = s.label;
+  msgEl.innerHTML = s.msg;
+
+  if(s.showCalendar && selectedDate === null){
+    btn.style.display = 'none';
+    calOverlay.classList.remove('show');
+    showMonthPanel();
+    setTimeout(()=>{ calOverlay.classList.add('show'); }, 450);
+    return;
+  }
+
+  calOverlay.classList.remove('show');
+  btn.style.display = '';
+  btn.textContent = s.cta;
+}
+
+function showMonthPanel(){
+  document.getElementById('monthPanel').style.display = '';
+  document.getElementById('dayPanel').style.display = 'none';
+}
+
+function buildMonthGrid(){
+  const grid = document.getElementById('monthGrid');
+  grid.innerHTML = '';
+  const now = new Date();
+  monthsList.forEach(({year, month}) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    const isNow = (year===now.getFullYear() && month===now.getMonth()+1);
+    b.className = 'month-btn' + (isNow ? ' is-now' : '');
+    const yearLabel = (month===8 && year===YEAR_START.year) || month===1 ? String(year)+'年' : '';
+    b.innerHTML = month + '月' + (yearLabel ? `<span class="yr">${yearLabel}</span>` : '');
+    b.addEventListener('click', ()=>openDayPanel(year, month, b));
+    grid.appendChild(b);
+  });
+}
+
+function openDayPanel(year, month, btnEl){
+  document.querySelectorAll('.month-btn').forEach(b=>b.classList.remove('selected'));
+  if(btnEl) btnEl.classList.add('selected');
+
+  document.getElementById('dayPanelTitle').textContent = year + '年 ' + month + '月';
+  buildWeekdayRow();
+  buildDayGrid(year, month);
+
+  document.getElementById('monthPanel').style.display = 'none';
+  document.getElementById('dayPanel').style.display = '';
+}
+
+function buildWeekdayRow(){
+  const row = document.getElementById('weekdayRow');
+  if(row.childElementCount) return;
+  row.innerHTML = WEEKDAYS.map(w => `<span>${w}</span>`).join('');
+}
+
+function buildDayGrid(year, month){
+  const grid = document.getElementById('dayGrid');
+  grid.innerHTML = '';
+  const firstWeekday = new Date(year, month-1, 1).getDay();
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const today = new Date();
+
+  for(let i=0;i<firstWeekday;i++){
+    const empty = document.createElement('div');
+    empty.className = 'day-cell-empty';
+    grid.appendChild(empty);
+  }
+  for(let d=1; d<=daysInMonth; d++){
+    const b = document.createElement('button');
+    b.type = 'button';
+    const isToday = (year===today.getFullYear() && month===today.getMonth()+1 && d===today.getDate());
+    b.className = 'day-btn' + (isToday ? ' is-today' : '');
+    b.textContent = d;
+    b.addEventListener('click', ()=>onSelectDay(year, month, d, b));
+    grid.appendChild(b);
+  }
+}
+
+function onSelectDay(year, month, day, btnEl){
+  selectedMonth = month;
+  selectedDate = { year, month, day };
+  document.querySelectorAll('.day-btn').forEach(b=>b.classList.remove('selected'));
+  btnEl.classList.add('selected');
+
+  const badge = document.getElementById('dateBadge');
+  document.getElementById('dateBadgeText').textContent = month + '月' + day + '日';
+  badge.classList.add('show');
+
+  setTimeout(()=>{
+    document.getElementById('calendarOverlay').classList.remove('show');
+    document.getElementById('bubble-label').textContent = "予約の目安、決まりました";
+    document.getElementById('bubble-msg').innerHTML =
+      month + "月" + day + "日に、そっと予約してみましょう。<br>鳥も、一緒に待っています。";
+    const btn = document.getElementById('advanceBtn');
+    btn.style.display = '';
+    btn.textContent = steps[current].cta;
+  }, 500);
+}
+
+function onAdvance(){
+  if(hopping || showingDiary) return;
+  if(current >= steps.length-1){
+    finishJourney();
+    return;
+  }
+  hopping = true;
+  hopStart = millis();
+  targetSeg = birdSeg+1;
+
+  // メッセージは少し遅らせて切り替える(歩き終わってから)
+  setTimeout(()=>{
+    current = targetSeg;
+    renderStep();
+    if(current === steps.length-1){
+      document.getElementById('advanceBtn').textContent = "記録を開く";
+    }
+  }, HOP_MS+80);
+}
+
+function finishJourney(){
+  spawnConfetti();
+  showingDiary = true;
+  document.getElementById('advanceBtn').disabled = true;
+  const diaryText = document.getElementById('diary-text');
+  if(selectedDate){
+    diaryText.innerHTML = selectedDate.month + "月" + selectedDate.day + "日に予約して、<br>今日という日を迎えました。";
+  } else {
+    diaryText.innerHTML = "今年も、自分の体と<br>そっと向き合いました。";
+  }
+  const diary = document.getElementById('diary');
+  setTimeout(()=>{ diary.classList.add('show'); }, 600);
+}
+
+function resetJourney(){
+  document.getElementById('diary').classList.remove('show');
+  document.getElementById('calendarOverlay').classList.remove('show');
+  document.getElementById('dateBadge').classList.remove('show');
+  document.querySelectorAll('.month-btn, .day-btn').forEach(b=>b.classList.remove('selected'));
+  showMonthPanel();
+  confetti = [];
+  showingDiary = false;
+  selectedMonth = null;
+  selectedDate = null;
+  current = 0;
+  birdSeg = 0;
+  targetSeg = 0;
+  hopping = false;
+  document.getElementById('advanceBtn').disabled = false;
+  renderStep();
+}
+</script>
+</body>
+</html>
