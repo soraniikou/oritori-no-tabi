@@ -837,9 +837,8 @@ function finishJourney(){
   document.getElementById('advanceBtn').disabled = true;
   document.getElementById('advanceWrap').classList.add('hidden');
   document.getElementById('bubble').style.opacity = '0';
-  const diaryText = document.getElementById('diary-text');
-  if(selectedDate){
-    diaryText.innerHTML = selectedDate.month + "月" + selectedDate.day + "日に予約して、<br>今日という日を迎えました。";
+  const diaryText = document.getElementById('diary-text').innerHTML;
+  diaryText.innerHTML = selectedDate.month + "月" + selectedDate.day + "日に予約して、<br>今日という日を迎えました。<br><br>📅 スマホのカレンダーにも<br>　　メモしておくと安心です。";
   } else {
     diaryText.innerHTML = "今年も、自分の体と<br>そっと向き合いました。";
   }
